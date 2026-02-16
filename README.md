@@ -10,7 +10,7 @@ Plugin para Craft CMS que permite acceder a los contenidos del sitio mediante el
 - ✅ Control granular de permisos
 - ✅ Cache integrado
 - ✅ Tools personalizables
-- ✅ Interfaz de configuración visual
+- ✅ Interfaz de configuración visual con tabs genéricas (estilo CP)
 
 ## 📋 Requisitos
 
@@ -36,13 +36,20 @@ composer require pragmatic/mcp-craftcms-plugin
 
 ### 2. Configurar el Plugin
 
-1. Ve a Configuración → Plugins → Pragmatic MCP
-2. Configura:
-   - Recursos a exponer (Entries, Assets, etc.)
-   - Secciones permitidas
-   - Tools habilitados
-   - Campos personalizados a incluir
-   - Límites de seguridad
+1. Ve al plugin desde el menú de control:
+   - `/admin/pragmatic-mcp/sections`
+   - `/admin/pragmatic-mcp/options`
+2. Configura por pestañas:
+   - **Secciones**: secciones permitidas (`allowedSections`)
+   - **Opciones**: recursos, tools, límites, campos personalizados, cache y seguridad
+
+### 2.1 Estructura de Tabs (CP)
+
+El plugin usa la estructura genérica de tabs de Craft, como en Pragmatic SEO:
+
+- `pragmatic-mcp/sections` → plantilla `sections.twig`
+- `pragmatic-mcp/options` → plantilla `options.twig`
+- layout compartido: `_layout.twig`
 
 ### 3. Instalar Dependencias de Node.js
 
@@ -229,7 +236,9 @@ ssh usuario@tu-servidor.com "php craft mcp/info"
 ### No aparecen datos
 
 1. Verifica que el plugin esté habilitado
-2. Revisa la configuración de recursos y secciones
+2. Revisa configuración en:
+   - `/admin/pragmatic-mcp/sections`
+   - `/admin/pragmatic-mcp/options`
 3. Limpia el cache: `php craft mcp/clear-cache`
 4. Verifica permisos de PHP en los directorios
 
