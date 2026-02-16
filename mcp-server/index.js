@@ -21,6 +21,83 @@ import { execSync } from "child_process";
 const CRAFT_PATH = process.env.CRAFT_PATH || "/var/www/html";
 const PHP_PATH = process.env.PHP_PATH || "php";
 
+function parseCraftJsonOutput(output) {
+  const text = (output ?? "").trim();
+  if (!text) {
+    throw new Error("La salida de Craft está vacía");
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (_) {
+    // Continue with block extraction fallback.
+  }
+
+  const starts = [];
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === "{" || ch === "[") {
+      starts.push(i);
+    }
+  }
+
+  for (let s = starts.length - 1; s >= 0; s--) {
+    const start = starts[s];
+    const stack = [];
+    let inString = false;
+    let escape = false;
+
+    for (let i = start; i < text.length; i++) {
+      const ch = text[i];
+
+      if (inString) {
+        if (escape) {
+          escape = false;
+          continue;
+        }
+        if (ch === "\\") {
+          escape = true;
+          continue;
+        }
+        if (ch === "\"") {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (ch === "\"") {
+        inString = true;
+        continue;
+      }
+
+      if (ch === "{") {
+        stack.push("}");
+        continue;
+      }
+      if (ch === "[") {
+        stack.push("]");
+        continue;
+      }
+      if (ch === "}" || ch === "]") {
+        if (stack.length === 0 || stack[stack.length - 1] !== ch) {
+          break;
+        }
+        stack.pop();
+        if (stack.length === 0) {
+          const candidate = text.slice(start, i + 1);
+          try {
+            return JSON.parse(candidate);
+          } catch (_) {
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  throw new Error("No se pudo parsear un bloque JSON válido desde la salida de Craft");
+}
+
 /**
  * Ejecuta un comando de Craft CMS y retorna el resultado JSON
  */
@@ -45,11 +122,7 @@ function craftCommand(command, args = []) {
       stdio: ['pipe', 'pipe', 'pipe']
     });
     
-    // Limpiar posible output extra y parsear JSON
-    const lines = result.trim().split('\n');
-    const jsonLine = lines[lines.length - 1];
-    
-    return JSON.parse(jsonLine);
+    return parseCraftJsonOutput(result);
   } catch (error) {
     console.error("Error ejecutando comando Craft:", error.message);
     if (error.stderr) {
