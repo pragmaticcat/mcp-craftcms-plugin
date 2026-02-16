@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "craft-cms": {
+      "command": "ssh",
+      "args": [
+        "-i",
+        "/Users/tu-usuario/.ssh/id_rsa",
+        "usuario@tu-servidor.com",
+        "CRAFT_PATH=/var/www/html PHP_PATH=/usr/bin/php node /var/www/html/plugins/pragmatic-mcp/mcp-server/index.js"
+      ]
+    }
+  }
+}

@@ -1,0 +1,216 @@
+{% import "_includes/forms" as forms %}
+
+<style>
+    .mcp-settings-section {
+        margin-bottom: 40px;
+        padding-bottom: 30px;
+        border-bottom: 1px solid #e3e5e8;
+    }
+    .mcp-settings-section:last-child {
+        border-bottom: none;
+    }
+    .mcp-warning {
+        padding: 15px;
+        background: #fff4e6;
+        border-left: 4px solid #ff9800;
+        margin: 20px 0;
+    }
+    .mcp-info {
+        padding: 15px;
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        margin: 20px 0;
+    }
+</style>
+
+<div class="mcp-info">
+    <strong>ℹ️ Información:</strong> Este plugin permite que Claude acceda a los contenidos de tu sitio Craft CMS mediante el protocolo MCP (Model Context Protocol).
+    Configura qué recursos y herramientas estarán disponibles.
+</div>
+
+<div class="mcp-settings-section">
+    <h2>🗂️ Recursos Disponibles</h2>
+    <p>Selecciona qué tipos de contenido estarán accesibles vía MCP.</p>
+
+    {{ forms.lightswitchField({
+        label: 'Habilitar Entries',
+        name: 'enableEntries',
+        on: settings.enableEntries,
+        instructions: 'Permite acceder a las entradas del sitio'
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: 'Habilitar Assets',
+        name: 'enableAssets',
+        on: settings.enableAssets,
+        instructions: 'Permite acceder a los archivos y assets'
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: 'Habilitar Categorías',
+        name: 'enableCategories',
+        on: settings.enableCategories,
+        instructions: 'Permite acceder a las categorías'
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: 'Habilitar Usuarios',
+        name: 'enableUsers',
+        on: settings.enableUsers,
+        instructions: 'Permite acceder a la información de usuarios (usar con precaución)'
+    }) }}
+</div>
+
+<div class="mcp-settings-section">
+    <h2>🔒 Secciones Permitidas</h2>
+    <p>Limita el acceso a secciones específicas. Deja vacío para permitir todas.</p>
+
+    {% set sectionOptions = [] %}
+    {% for section in craft.app.sections.allSections %}
+        {% set sectionOptions = sectionOptions|merge([{
+            label: section.name ~ ' (' ~ section.handle ~ ')',
+            value: section.handle
+        }]) %}
+    {% endfor %}
+
+    {{ forms.checkboxSelectField({
+        label: 'Secciones Accesibles',
+        name: 'allowedSections',
+        options: sectionOptions,
+        values: settings.allowedSections,
+        instructions: 'Si no seleccionas ninguna, todas las secciones estarán disponibles'
+    }) }}
+</div>
+
+<div class="mcp-settings-section">
+    <h2>🛠️ Herramientas (Tools)</h2>
+    <p>Habilita las herramientas que Claude podrá usar para consultar contenidos.</p>
+
+    {{ forms.lightswitchField({
+        label: 'Tool: Búsqueda de Entradas',
+        name: 'enableSearchTool',
+        on: settings.enableSearchTool,
+        instructions: 'Permite buscar entradas por texto'
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: 'Tool: Detalles de Entrada',
+        name: 'enableDetailsTool',
+        on: settings.enableDetailsTool,
+        instructions: 'Permite obtener información detallada de entradas específicas'
+    }) }}
+
+    <div class="mcp-warning">
+        <strong>⚠️ Precaución:</strong> Las consultas personalizadas permiten ejecutar queries complejas. Solo habilitar si confías completamente en los usuarios del MCP.
+    </div>
+
+    {{ forms.lightswitchField({
+        label: 'Tool: Consultas Personalizadas',
+        name: 'enableCustomQueries',
+        on: settings.enableCustomQueries,
+        instructions: 'Permite ejecutar consultas personalizadas definidas en la configuración'
+    }) }}
+</div>
+
+<div class="mcp-settings-section">
+    <h2>📊 Límites de Seguridad</h2>
+    <p>Define límites para proteger el rendimiento del servidor.</p>
+
+    {{ forms.textField({
+        label: 'Máximo de Resultados',
+        name: 'maxResults',
+        value: settings.maxResults,
+        type: 'number',
+        instructions: 'Número máximo de resultados que puede retornar cualquier consulta (1-1000)',
+        min: 1,
+        max: 1000
+    }) }}
+
+    {{ forms.textField({
+        label: 'Complejidad Máxima de Query',
+        name: 'maxQueryComplexity',
+        value: settings.maxQueryComplexity,
+        type: 'number',
+        instructions: 'Nivel máximo de complejidad permitido para consultas (1-10)',
+        min: 1,
+        max: 10
+    }) }}
+</div>
+
+<div class="mcp-settings-section">
+    <h2>🏷️ Campos Personalizados</h2>
+    <p>Define qué campos personalizados estarán disponibles en las respuestas.</p>
+
+    {{ forms.editableTableField({
+        label: 'Campos a Exponer',
+        name: 'exposedFields',
+        instructions: 'Lista los handles de los campos personalizados que quieres incluir en las respuestas del MCP',
+        cols: {
+            field: {
+                heading: 'Handle del Campo',
+                type: 'singleline',
+                width: '100%'
+            }
+        },
+        rows: settings.exposedFields|map(field => {field: field}),
+        addRowLabel: 'Agregar campo'
+    }) }}
+
+    <div class="mcp-info">
+        <strong>💡 Tip:</strong> Puedes usar handles como: <code>myCustomField</code>, <code>richTextContent</code>, <code>featuredImage</code>, etc.
+    </div>
+</div>
+
+<div class="mcp-settings-section">
+    <h2>⚡ Cache</h2>
+    <p>Mejora el rendimiento almacenando resultados en cache.</p>
+
+    {{ forms.lightswitchField({
+        label: 'Habilitar Cache',
+        name: 'enableCache',
+        on: settings.enableCache,
+        instructions: 'Activa el cache para respuestas de recursos'
+    }) }}
+
+    {{ forms.textField({
+        label: 'Duración del Cache (segundos)',
+        name: 'cacheDuration',
+        value: settings.cacheDuration,
+        type: 'number',
+        instructions: 'Tiempo que los recursos permanecerán en cache (recomendado: 3600 = 1 hora)',
+        disabled: not settings.enableCache
+    }) }}
+</div>
+
+<div class="mcp-settings-section">
+    <h2>🔐 Seguridad Avanzada (Opcional)</h2>
+    <p>Configuración adicional de seguridad para el acceso al MCP.</p>
+
+    {{ forms.passwordField({
+        label: 'Token de Acceso',
+        name: 'accessToken',
+        value: settings.accessToken,
+        instructions: 'Token opcional para autenticar peticiones al MCP (dejar vacío para desactivar)',
+        placeholder: 'Genera un token seguro'
+    }) }}
+
+    {{ forms.textareaField({
+        label: 'IPs Permitidas',
+        name: 'allowedIpAddresses',
+        value: settings.allowedIpAddresses|join("\n"),
+        instructions: 'Lista de direcciones IP permitidas (una por línea). Dejar vacío para permitir todas',
+        placeholder: "192.168.1.1\n10.0.0.1",
+        rows: 4
+    }) }}
+</div>
+
+<div class="mcp-info">
+    <h3>📖 Cómo usar este plugin:</h3>
+    <ol>
+        <li>Configura los recursos y herramientas que deseas habilitar arriba</li>
+        <li>En tu servidor, ejecuta el servidor MCP usando Node.js (ver documentación)</li>
+        <li>Configura Claude Desktop para conectarse vía SSH a tu servidor</li>
+        <li>¡Listo! Claude podrá consultar tus contenidos de Craft CMS</li>
+    </ol>
+    <p><strong>Comando de prueba:</strong> <code>php craft mcp/info</code></p>
+</div>
