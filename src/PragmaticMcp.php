@@ -39,6 +39,12 @@ class PragmaticMcp extends Plugin
 
         self::$plugin = $this;
 
+        Craft::$app->i18n->translations['pragmatic-mcp'] = [
+            'class' => \yii\i18n\PhpMessageSource::class,
+            'basePath' => __DIR__ . '/translations',
+            'forceTranslation' => true,
+        ];
+
         if (Craft::$app->request->isConsoleRequest) {
             $this->controllerNamespace = 'pragmatic\\mcp\\console\\controllers';
         }

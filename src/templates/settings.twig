@@ -1,216 +1,292 @@
 {% import "_includes/forms" as forms %}
 
-<style>
-    .mcp-settings-section {
-        margin-bottom: 40px;
-        padding-bottom: 30px;
-        border-bottom: 1px solid #e3e5e8;
+{% set tabItems = [
+    { key: 'sections', label: 'Secciones'|t('pragmatic-mcp') },
+    { key: 'options', label: 'Opciones'|t('pragmatic-mcp') },
+] %}
+
+{% css %}
+    .mcp-tabs {
+        margin-bottom: 18px;
     }
-    .mcp-settings-section:last-child {
-        border-bottom: none;
+    .mcp-tab-content {
+        display: none;
+    }
+    .mcp-tab-content.active {
+        display: block;
+    }
+    .mcp-settings-section {
+        margin-bottom: 18px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 14px;
+        background: #fff;
+    }
+    .mcp-settings-section h2 {
+        margin: 0 0 4px;
+        font-size: 15px;
+    }
+    .mcp-settings-section > p {
+        margin: 0 0 14px;
     }
     .mcp-warning {
-        padding: 15px;
+        padding: 12px;
         background: #fff4e6;
         border-left: 4px solid #ff9800;
-        margin: 20px 0;
+        margin: 14px 0;
     }
     .mcp-info {
-        padding: 15px;
+        padding: 12px;
         background: #e3f2fd;
         border-left: 4px solid #2196f3;
-        margin: 20px 0;
+        margin: 14px 0;
     }
-</style>
+    .mcp-options-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+    @media (max-width: 1023px) {
+        .mcp-options-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+{% endcss %}
 
-<div class="mcp-info">
-    <strong>ℹ️ Información:</strong> Este plugin permite que Claude acceda a los contenidos de tu sitio Craft CMS mediante el protocolo MCP (Model Context Protocol).
-    Configura qué recursos y herramientas estarán disponibles.
+<div class="pane-tabs mcp-tabs">
+    <nav class="tabs" role="tablist">
+        {% for tab in tabItems %}
+            <a
+                id="mcp-tab-{{ tab.key }}"
+                class="tab {{ tab.key == 'sections' ? 'sel' : '' }}"
+                href="#mcp-pane-{{ tab.key }}"
+                role="tab"
+                aria-selected="{{ tab.key == 'sections' ? 'true' : 'false' }}"
+            >
+                {{ tab.label }}
+            </a>
+        {% endfor %}
+    </nav>
 </div>
 
-<div class="mcp-settings-section">
-    <h2>🗂️ Recursos Disponibles</h2>
-    <p>Selecciona qué tipos de contenido estarán accesibles vía MCP.</p>
+<div id="mcp-pane-sections" class="mcp-tab-content active">
+    <div class="mcp-settings-section">
+        <h2>{{ 'Secciones permitidas'|t('pragmatic-mcp') }}</h2>
+        <p>{{ 'Limita el acceso a secciones específicas. Deja vacío para permitir todas.'|t('pragmatic-mcp') }}</p>
 
-    {{ forms.lightswitchField({
-        label: 'Habilitar Entries',
-        name: 'enableEntries',
-        on: settings.enableEntries,
-        instructions: 'Permite acceder a las entradas del sitio'
-    }) }}
+        {% set sectionOptions = [] %}
+        {% for section in craft.app.entries.getAllSections() %}
+            {% set sectionOptions = sectionOptions|merge([{
+                label: section.name ~ ' (' ~ section.handle ~ ')',
+                value: section.handle
+            }]) %}
+        {% endfor %}
 
-    {{ forms.lightswitchField({
-        label: 'Habilitar Assets',
-        name: 'enableAssets',
-        on: settings.enableAssets,
-        instructions: 'Permite acceder a los archivos y assets'
-    }) }}
-
-    {{ forms.lightswitchField({
-        label: 'Habilitar Categorías',
-        name: 'enableCategories',
-        on: settings.enableCategories,
-        instructions: 'Permite acceder a las categorías'
-    }) }}
-
-    {{ forms.lightswitchField({
-        label: 'Habilitar Usuarios',
-        name: 'enableUsers',
-        on: settings.enableUsers,
-        instructions: 'Permite acceder a la información de usuarios (usar con precaución)'
-    }) }}
-</div>
-
-<div class="mcp-settings-section">
-    <h2>🔒 Secciones Permitidas</h2>
-    <p>Limita el acceso a secciones específicas. Deja vacío para permitir todas.</p>
-
-    {% set sectionOptions = [] %}
-    {% for section in craft.app.entries.getAllSections() %}
-        {% set sectionOptions = sectionOptions|merge([{
-            label: section.name ~ ' (' ~ section.handle ~ ')',
-            value: section.handle
-        }]) %}
-    {% endfor %}
-
-    {{ forms.checkboxSelectField({
-        label: 'Secciones Accesibles',
-        name: 'allowedSections',
-        options: sectionOptions,
-        values: settings.allowedSections,
-        instructions: 'Si no seleccionas ninguna, todas las secciones estarán disponibles'
-    }) }}
-</div>
-
-<div class="mcp-settings-section">
-    <h2>🛠️ Herramientas (Tools)</h2>
-    <p>Habilita las herramientas que Claude podrá usar para consultar contenidos.</p>
-
-    {{ forms.lightswitchField({
-        label: 'Tool: Búsqueda de Entradas',
-        name: 'enableSearchTool',
-        on: settings.enableSearchTool,
-        instructions: 'Permite buscar entradas por texto'
-    }) }}
-
-    {{ forms.lightswitchField({
-        label: 'Tool: Detalles de Entrada',
-        name: 'enableDetailsTool',
-        on: settings.enableDetailsTool,
-        instructions: 'Permite obtener información detallada de entradas específicas'
-    }) }}
-
-    <div class="mcp-warning">
-        <strong>⚠️ Precaución:</strong> Las consultas personalizadas permiten ejecutar queries complejas. Solo habilitar si confías completamente en los usuarios del MCP.
-    </div>
-
-    {{ forms.lightswitchField({
-        label: 'Tool: Consultas Personalizadas',
-        name: 'enableCustomQueries',
-        on: settings.enableCustomQueries,
-        instructions: 'Permite ejecutar consultas personalizadas definidas en la configuración'
-    }) }}
-</div>
-
-<div class="mcp-settings-section">
-    <h2>📊 Límites de Seguridad</h2>
-    <p>Define límites para proteger el rendimiento del servidor.</p>
-
-    {{ forms.textField({
-        label: 'Máximo de Resultados',
-        name: 'maxResults',
-        value: settings.maxResults,
-        type: 'number',
-        instructions: 'Número máximo de resultados que puede retornar cualquier consulta (1-1000)',
-        min: 1,
-        max: 1000
-    }) }}
-
-    {{ forms.textField({
-        label: 'Complejidad Máxima de Query',
-        name: 'maxQueryComplexity',
-        value: settings.maxQueryComplexity,
-        type: 'number',
-        instructions: 'Nivel máximo de complejidad permitido para consultas (1-10)',
-        min: 1,
-        max: 10
-    }) }}
-</div>
-
-<div class="mcp-settings-section">
-    <h2>🏷️ Campos Personalizados</h2>
-    <p>Define qué campos personalizados estarán disponibles en las respuestas.</p>
-
-    {{ forms.editableTableField({
-        label: 'Campos a Exponer',
-        name: 'exposedFields',
-        instructions: 'Lista los handles de los campos personalizados que quieres incluir en las respuestas del MCP',
-        cols: {
-            field: {
-                heading: 'Handle del Campo',
-                type: 'singleline',
-                width: '100%'
-            }
-        },
-        rows: settings.exposedFields|map(field => {field: field}),
-        addRowLabel: 'Agregar campo'
-    }) }}
-
-    <div class="mcp-info">
-        <strong>💡 Tip:</strong> Puedes usar handles como: <code>myCustomField</code>, <code>richTextContent</code>, <code>featuredImage</code>, etc.
+        {{ forms.checkboxSelectField({
+            label: 'Secciones Accesibles'|t('pragmatic-mcp'),
+            name: 'allowedSections',
+            options: sectionOptions,
+            values: settings.allowedSections,
+            instructions: 'Si no seleccionas ninguna, todas las secciones estarán disponibles'|t('pragmatic-mcp')
+        }) }}
     </div>
 </div>
 
-<div class="mcp-settings-section">
-    <h2>⚡ Cache</h2>
-    <p>Mejora el rendimiento almacenando resultados en cache.</p>
+<div id="mcp-pane-options" class="mcp-tab-content">
+    <div class="mcp-options-grid">
+        <section class="mcp-settings-section">
+            <h2>{{ 'Recursos disponibles'|t('pragmatic-mcp') }}</h2>
+            <p>{{ 'Selecciona qué tipos de contenido estarán accesibles vía MCP.'|t('pragmatic-mcp') }}</p>
 
-    {{ forms.lightswitchField({
-        label: 'Habilitar Cache',
-        name: 'enableCache',
-        on: settings.enableCache,
-        instructions: 'Activa el cache para respuestas de recursos'
-    }) }}
+            {{ forms.lightswitchField({
+                label: 'Habilitar Entries'|t('pragmatic-mcp'),
+                name: 'enableEntries',
+                on: settings.enableEntries,
+                instructions: 'Permite acceder a las entradas del sitio'|t('pragmatic-mcp')
+            }) }}
 
-    {{ forms.textField({
-        label: 'Duración del Cache (segundos)',
-        name: 'cacheDuration',
-        value: settings.cacheDuration,
-        type: 'number',
-        instructions: 'Tiempo que los recursos permanecerán en cache (recomendado: 3600 = 1 hora)',
-        disabled: not settings.enableCache
-    }) }}
+            {{ forms.lightswitchField({
+                label: 'Habilitar Assets'|t('pragmatic-mcp'),
+                name: 'enableAssets',
+                on: settings.enableAssets,
+                instructions: 'Permite acceder a los archivos y assets'|t('pragmatic-mcp')
+            }) }}
+
+            {{ forms.lightswitchField({
+                label: 'Habilitar Categorías'|t('pragmatic-mcp'),
+                name: 'enableCategories',
+                on: settings.enableCategories,
+                instructions: 'Permite acceder a las categorías'|t('pragmatic-mcp')
+            }) }}
+
+            {{ forms.lightswitchField({
+                label: 'Habilitar Usuarios'|t('pragmatic-mcp'),
+                name: 'enableUsers',
+                on: settings.enableUsers,
+                instructions: 'Permite acceder a la información de usuarios (usar con precaución)'|t('pragmatic-mcp')
+            }) }}
+        </section>
+
+        <section class="mcp-settings-section">
+            <h2>{{ 'Herramientas (Tools)'|t('pragmatic-mcp') }}</h2>
+            <p>{{ 'Habilita las herramientas que Claude podrá usar para consultar contenidos.'|t('pragmatic-mcp') }}</p>
+
+            {{ forms.lightswitchField({
+                label: 'Tool: Búsqueda de Entradas'|t('pragmatic-mcp'),
+                name: 'enableSearchTool',
+                on: settings.enableSearchTool,
+                instructions: 'Permite buscar entradas por texto'|t('pragmatic-mcp')
+            }) }}
+
+            {{ forms.lightswitchField({
+                label: 'Tool: Detalles de Entrada'|t('pragmatic-mcp'),
+                name: 'enableDetailsTool',
+                on: settings.enableDetailsTool,
+                instructions: 'Permite obtener información detallada de entradas específicas'|t('pragmatic-mcp')
+            }) }}
+
+            <div class="mcp-warning">
+                <strong>{{ 'Precaución:'|t('pragmatic-mcp') }}</strong>
+                {{ 'Las consultas personalizadas permiten ejecutar queries complejas. Solo habilitar si confías completamente en los usuarios del MCP.'|t('pragmatic-mcp') }}
+            </div>
+
+            {{ forms.lightswitchField({
+                label: 'Tool: Consultas Personalizadas'|t('pragmatic-mcp'),
+                name: 'enableCustomQueries',
+                on: settings.enableCustomQueries,
+                instructions: 'Permite ejecutar consultas personalizadas definidas en la configuración'|t('pragmatic-mcp')
+            }) }}
+        </section>
+
+        <section class="mcp-settings-section">
+            <h2>{{ 'Límites de Seguridad'|t('pragmatic-mcp') }}</h2>
+            <p>{{ 'Define límites para proteger el rendimiento del servidor.'|t('pragmatic-mcp') }}</p>
+
+            {{ forms.textField({
+                label: 'Máximo de Resultados'|t('pragmatic-mcp'),
+                name: 'maxResults',
+                value: settings.maxResults,
+                type: 'number',
+                instructions: 'Número máximo de resultados que puede retornar cualquier consulta (1-1000)'|t('pragmatic-mcp'),
+                min: 1,
+                max: 1000
+            }) }}
+
+            {{ forms.textField({
+                label: 'Complejidad Máxima de Query'|t('pragmatic-mcp'),
+                name: 'maxQueryComplexity',
+                value: settings.maxQueryComplexity,
+                type: 'number',
+                instructions: 'Nivel máximo de complejidad permitido para consultas (1-10)'|t('pragmatic-mcp'),
+                min: 1,
+                max: 10
+            }) }}
+        </section>
+
+        <section class="mcp-settings-section">
+            <h2>{{ 'Campos Personalizados'|t('pragmatic-mcp') }}</h2>
+            <p>{{ 'Define qué campos personalizados estarán disponibles en las respuestas.'|t('pragmatic-mcp') }}</p>
+
+            {{ forms.editableTableField({
+                label: 'Campos a Exponer'|t('pragmatic-mcp'),
+                name: 'exposedFields',
+                instructions: 'Lista los handles de los campos personalizados que quieres incluir en las respuestas del MCP'|t('pragmatic-mcp'),
+                cols: {
+                    field: {
+                        heading: 'Handle del Campo'|t('pragmatic-mcp'),
+                        type: 'singleline',
+                        width: '100%'
+                    }
+                },
+                rows: settings.exposedFields|map(field => {field: field}),
+                addRowLabel: 'Agregar campo'|t('pragmatic-mcp')
+            }) }}
+
+            <div class="mcp-info">
+                <strong>{{ 'Tip:'|t('pragmatic-mcp') }}</strong>
+                {{ 'Puedes usar handles como:'|t('pragmatic-mcp') }}
+                <code>myCustomField</code>, <code>richTextContent</code>, <code>featuredImage</code>.
+            </div>
+        </section>
+
+        <section class="mcp-settings-section">
+            <h2>{{ 'Cache'|t('pragmatic-mcp') }}</h2>
+            <p>{{ 'Mejora el rendimiento almacenando resultados en cache.'|t('pragmatic-mcp') }}</p>
+
+            {{ forms.lightswitchField({
+                label: 'Habilitar Cache'|t('pragmatic-mcp'),
+                name: 'enableCache',
+                on: settings.enableCache,
+                instructions: 'Activa el cache para respuestas de recursos'|t('pragmatic-mcp')
+            }) }}
+
+            {{ forms.textField({
+                label: 'Duración del Cache (segundos)'|t('pragmatic-mcp'),
+                name: 'cacheDuration',
+                value: settings.cacheDuration,
+                type: 'number',
+                instructions: 'Tiempo que los recursos permanecerán en cache (recomendado: 3600 = 1 hora)'|t('pragmatic-mcp'),
+                disabled: not settings.enableCache
+            }) }}
+        </section>
+
+        <section class="mcp-settings-section">
+            <h2>{{ 'Seguridad Avanzada (Opcional)'|t('pragmatic-mcp') }}</h2>
+            <p>{{ 'Configuración adicional de seguridad para el acceso al MCP.'|t('pragmatic-mcp') }}</p>
+
+            {{ forms.passwordField({
+                label: 'Token de Acceso'|t('pragmatic-mcp'),
+                name: 'accessToken',
+                value: settings.accessToken,
+                instructions: 'Token opcional para autenticar peticiones al MCP (dejar vacío para desactivar)'|t('pragmatic-mcp'),
+                placeholder: 'Genera un token seguro'|t('pragmatic-mcp')
+            }) }}
+
+            {{ forms.textareaField({
+                label: 'IPs Permitidas'|t('pragmatic-mcp'),
+                name: 'allowedIpAddresses',
+                value: settings.allowedIpAddresses|join("\n"),
+                instructions: 'Lista de direcciones IP permitidas (una por línea). Dejar vacío para permitir todas'|t('pragmatic-mcp'),
+                placeholder: "192.168.1.1\n10.0.0.1",
+                rows: 4
+            }) }}
+        </section>
+    </div>
 </div>
 
-<div class="mcp-settings-section">
-    <h2>🔐 Seguridad Avanzada (Opcional)</h2>
-    <p>Configuración adicional de seguridad para el acceso al MCP.</p>
+{% js %}
+(() => {
+    const tabs = Array.from(document.querySelectorAll('.mcp-tabs a.tab'));
+    const panes = Array.from(document.querySelectorAll('.mcp-tab-content'));
+    if (!tabs.length || !panes.length) {
+        return;
+    }
 
-    {{ forms.passwordField({
-        label: 'Token de Acceso',
-        name: 'accessToken',
-        value: settings.accessToken,
-        instructions: 'Token opcional para autenticar peticiones al MCP (dejar vacío para desactivar)',
-        placeholder: 'Genera un token seguro'
-    }) }}
+    const setActive = (hash) => {
+        tabs.forEach((tab) => {
+            const active = tab.getAttribute('href') === hash;
+            tab.classList.toggle('sel', active);
+            tab.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
 
-    {{ forms.textareaField({
-        label: 'IPs Permitidas',
-        name: 'allowedIpAddresses',
-        value: settings.allowedIpAddresses|join("\n"),
-        instructions: 'Lista de direcciones IP permitidas (una por línea). Dejar vacío para permitir todas',
-        placeholder: "192.168.1.1\n10.0.0.1",
-        rows: 4
-    }) }}
-</div>
+        panes.forEach((pane) => {
+            pane.classList.toggle('active', '#' + pane.id === hash);
+        });
+    };
 
-<div class="mcp-info">
-    <h3>📖 Cómo usar este plugin:</h3>
-    <ol>
-        <li>Configura los recursos y herramientas que deseas habilitar arriba</li>
-        <li>En tu servidor, ejecuta el servidor MCP usando Node.js (ver documentación)</li>
-        <li>Configura Claude Desktop para conectarse vía SSH a tu servidor</li>
-        <li>¡Listo! Claude podrá consultar tus contenidos de Craft CMS</li>
-    </ol>
-    <p><strong>Comando de prueba:</strong> <code>php craft mcp/info</code></p>
-</div>
+    tabs.forEach((tab) => {
+        tab.addEventListener('click', (event) => {
+            event.preventDefault();
+            const hash = tab.getAttribute('href');
+            history.replaceState(null, '', hash);
+            setActive(hash);
+        });
+    });
+
+    const initialHash = window.location.hash && document.querySelector(window.location.hash)
+        ? window.location.hash
+        : '#mcp-pane-sections';
+
+    setActive(initialHash);
+})();
+{% endjs %}
