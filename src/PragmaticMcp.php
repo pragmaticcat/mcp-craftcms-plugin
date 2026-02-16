@@ -49,6 +49,7 @@ class PragmaticMcp extends Plugin
 
         if (Craft::$app->request->isConsoleRequest) {
             $this->controllerNamespace = 'pragmatic\\mcp\\console\\controllers';
+            Craft::$app->controllerMap['mcp'] = console\controllers\McpController::class;
         }
 
         Event::on(
