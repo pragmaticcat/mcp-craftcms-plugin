@@ -22,7 +22,7 @@
     "email": "oriolnoya@pragmatic.cat"
   },
   "extra": {
-    "handle": "pragmatic-mcp-craftcms-plugin",
+    "handle": "pragmatic-mcp",
     "class": "pragmatic\\mcp\\PragmaticMcp",
     "name": "Pragmatic MCP",
     "developer": "Pragmatic",
