@@ -58,10 +58,9 @@ class PragmaticMcp extends Plugin
                 $event->rules['pragmatic-mcp'] = 'pragmatic-mcp/default/index';
                 $event->rules['pragmatic-mcp/options'] = 'pragmatic-mcp/default/options';
                 $event->rules['pragmatic-mcp/sections'] = 'pragmatic-mcp/default/sections';
+                $event->rules['pragmatic-mcp/save-settings'] = 'pragmatic-mcp/default/save-settings';
             }
         );
-
-        Craft::info('Pragmatic MCP plugin loaded', __METHOD__);
 
         // Register nav item under shared "Tools" group
         Event::on(
@@ -127,14 +126,6 @@ class PragmaticMcp extends Plugin
     protected function createSettingsModel(): ?Model
     {
         return new models\Settings();
-    }
-
-    protected function settingsHtml(): ?string
-    {
-        return Craft::$app->view->renderTemplate(
-            'pragmatic-mcp/settings',
-            ['settings' => $this->getSettings()]
-        );
     }
 
     public function getCpNavItem(): ?array

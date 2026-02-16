@@ -1,0 +1,12 @@
+{% extends parentLayout|default('_layouts/cp') %}
+
+{% set title = title ?? 'Pragmatic MCP'|t('pragmatic-mcp') %}
+{% set selectedSubnavItem = 'mcp' %}
+{% set selectedTab = selectedTab ?? (craft.app.request.getSegment(2) ?? 'sections') %}
+
+{% set tabs = {
+    'sections': { label: 'Secciones'|t('pragmatic-mcp'), url: url('pragmatic-mcp/sections') },
+    'options': { label: 'Opciones'|t('pragmatic-mcp'), url: url('pragmatic-mcp/options') },
+} %}
+
+{% block content %}{% endblock %}
