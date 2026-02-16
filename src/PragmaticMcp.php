@@ -5,6 +5,8 @@ namespace pragmatic\mcp;
 use Craft;
 use craft\base\Model;
 use craft\base\Plugin;
+use craft\events\RegisterUrlRulesEvent;
+use craft\web\UrlManager;
 use yii\base\Event;
 use craft\web\twig\variables\Cp;
 use craft\events\RegisterCpNavItemsEvent;
@@ -48,6 +50,16 @@ class PragmaticMcp extends Plugin
         if (Craft::$app->request->isConsoleRequest) {
             $this->controllerNamespace = 'pragmatic\\mcp\\console\\controllers';
         }
+
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_CP_URL_RULES,
+            function (RegisterUrlRulesEvent $event) {
+                $event->rules['pragmatic-mcp'] = 'settings/plugins/pragmatic-mcp-craftcms-plugin';
+                $event->rules['pragmatic-mcp/options'] = 'settings/plugins/pragmatic-mcp-craftcms-plugin';
+                $event->rules['pragmatic-mcp/sections'] = 'settings/plugins/pragmatic-mcp-craftcms-plugin';
+            }
+        );
 
         Craft::info('Pragmatic MCP plugin loaded', __METHOD__);
 
