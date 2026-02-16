@@ -55,9 +55,9 @@ class PragmaticMcp extends Plugin
             UrlManager::class,
             UrlManager::EVENT_REGISTER_CP_URL_RULES,
             function (RegisterUrlRulesEvent $event) {
-                $event->rules['pragmatic-mcp'] = 'settings/plugins/pragmatic-mcp-craftcms-plugin';
-                $event->rules['pragmatic-mcp/options'] = 'settings/plugins/pragmatic-mcp-craftcms-plugin';
-                $event->rules['pragmatic-mcp/sections'] = 'settings/plugins/pragmatic-mcp-craftcms-plugin';
+                $event->rules['pragmatic-mcp'] = 'pragmatic-mcp/default/index';
+                $event->rules['pragmatic-mcp/options'] = 'pragmatic-mcp/default/options';
+                $event->rules['pragmatic-mcp/sections'] = 'pragmatic-mcp/default/sections';
             }
         );
 
