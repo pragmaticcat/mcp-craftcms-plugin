@@ -93,8 +93,8 @@ class PragmaticMcp extends Plugin
                     }
                 }
 
-                $event->navItems[$groupKey]['subnav']['translations'] = [
-                    'label' => 'Translations',
+                $event->navItems[$groupKey]['subnav']['mcp'] = [
+                    'label' => 'MCP',
                     'url' => 'pragmatic-mcp',
                 ];
 
