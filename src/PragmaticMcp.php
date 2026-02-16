@@ -5,6 +5,9 @@ namespace pragmatic\mcp;
 use Craft;
 use craft\base\Model;
 use craft\base\Plugin;
+use yii\base\Event;
+use craft\web\twig\variables\Cp;
+use craft\events\RegisterCpNavItemsEvent;
 
 /**
  * @property services\ResourceService $resourceService
