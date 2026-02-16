@@ -338,7 +338,7 @@ class ResourceService extends Component
     private function getAllowedSections(): array
     {
         $settings = PragmaticMcp::getInstance()->getSettings();
-        $allSections = Craft::$app->sections->getAllSections();
+        $allSections = Craft::$app->entries->getAllSections();
 
         if (empty($settings->allowedSections)) {
             return $allSections;
